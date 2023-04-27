@@ -1,0 +1,355 @@
+<aura:component implements="force:hasRecordId,force:appHostable,lightning:actionOverride,lightning:hasPageReference,force:lightningQuickActionWithoutHeader"
+                access="global"
+                controller="XeroInvoicePageController">
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    <aura:attribute name="showform" type="boolean" default="false" />
+    <aura:attribute name="isOpen" type="boolean" default="true"/>
+    <aura:attribute name="recordId" type="String"  />
+    <aura:attribute name="isFormOpen" type="boolean" default="false"/>
+    <aura:attribute name="Region" type="String" />
+    
+    <aura:attribute name="inv" type="Invoice__c" default="{'sobjecttype':'Invoice__c'
+                                                          }" />
+    <aura:attribute name="cw" type="XeroInvoicePageController.CaseWrapper" />
+    <aura:attribute name="show_otherbox" type="boolean" default="false" />
+    <aura:attribute name="customerlist" type="List" />
+    <aura:attribute name="tclist" type="List" />
+    <aura:attribute name="mslist" type="List" />
+    <aura:attribute name="dmlist" type="List" />
+    <aura:attribute name="commlist" type="List" />
+    <aura:attribute name="aflist" type="List" />      
+    <aura:attribute name="itemlist" type="List" />
+    <aura:attribute name="tcmId" type="String" />
+    <aura:attribute name="xero_taxrates" type="Map" />
+     <ltng:require scripts="" 
+                  styles="{!join(',',
+                          $Resource.xeroinvoicepage_styles)}" />
+    
+    <aura:if isTrue="{!v.showform}">
+        
+        
+        <!--Use "slds-m-around_xx-large" class to add standard X-Large padding to the component--> 
+        <div class="slds-m-around_xx-large">
+            
+            <!--Use aura:if tag to display Model Box, on the bese of conditions. [isOpen boolean attribute] -->   
+            <aura:if isTrue="{!v.isOpen}">
+                
+                <!--###### MODAL BOX Start######--> 
+                <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+                    <div class="slds-modal__container">
+                        <!-- ###### MODAL BOX HEADER Start ######-->
+                        <header class="slds-modal__header">
+                            <lightning:buttonIcon iconName="utility:close"
+                                                  onclick="{! c.closeModel }"
+                                                  alternativeText="close"
+                                                  variant="bare-inverse"
+                                                  class="slds-modal__close"/>
+                            <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">
+                                New Invoice
+                            </h2>
+                        </header>
+                        <!--###### MODAL BOX BODY Part Start######-->
+                        <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                            
+                            <div style="background-color:white;margin:1% 0%">
+                                <div style="background-color:darkgreen;color:white;height:20px;width:100%;height:25px;font-size:18px">&nbsp;&nbsp;Invoice Details</div>
+                                <br />
+                                <lightning:recordEditForm objectApiName="Invoice__c">                                   
+                                    <div class="slds-grid slds-wrap">                    
+                                        <div class="slds-col slds-size_1-of-1 slds-small-size_1-of-1 slds-medium-size_1-of-2" style="padding:0px 2px;text-align:left">     
+                                            <lightning:inputfield variant="label-stacked" fieldName="Invoice_Number__c" value="{!v.inv.Invoice_Number__c}"  />                                          
+                                        </div>
+                                        <div class="slds-col slds-size_1-of-1 slds-small-size_1-of-1 slds-medium-size_1-of-2" style="padding:0px 2px;">     
+                                            <lightning:inputfield variant="label-stacked" fieldName="Case__c" value="{!v.inv.Case__c}" onchange="{!c.caseSelected}" />                                          
+                                        </div>                                        
+                                    </div>  
+                                    
+                                    <div class="slds-grid slds-wrap">                    
+                                        <div class="slds-col slds-size_1-of-1 slds-small-size_1-of-1 slds-medium-size_1-of-1" style="padding:0px 2px;text-align:left">     
+                                            <lightning:inputfield  variant="label-stacked" fieldName="Description__c" value="{!v.inv.Description__c}"  />                                          
+                                        </div>
+                                    </div>  
+                                    
+                                    <div class="slds-grid slds-wrap">                    
+                                        <div class="slds-col slds-size_1-of-1 slds-small-size_1-of-1 slds-medium-size_1-of-2" style="padding:0px 2px;text-align:left">     
+                                            <lightning:inputfield variant="label-stacked" fieldName="Date_of_issue__c" value="{!v.inv.Date_of_issue__c}"  />                                          
+                                        </div>
+                                        <div class="slds-col slds-size_1-of-1 slds-small-size_1-of-1 slds-medium-size_1-of-2" style="padding:0px 2px;">     
+                                            <lightning:inputfield variant="label-stacked" fieldName="Due_Date__c" value="{!v.inv.Due_Date__c}"  />                                          
+                                        </div>                                        
+                                    </div>  
+                                    <br />
+                                    <div class="slds-grid slds-wrap">                    
+                                        <div class="slds-col slds-size_1-of-1 slds-small-size_1-of-1 slds-medium-size_1-of-2" style="padding:0px 2px;text-align:left">     
+                                            <lightning:select  variant="label-stacked" required="true" name="select" value="{!v.inv.XERO_ContactID__c}" label="Customer" messageWhenValueMissing="Please select customer" onfocus="{!c.doSyncup}">
+                                                <option value="" text="None"></option>
+                                                <aura:iteration items="{!v.customerlist}" var="cus">
+                                                    <option value="{!cus.Id}" text="{!cus.Name}"></option>
+                                                </aura:iteration>
+                                            </lightning:select>
+                                        </div>
+                                        <div class="slds-col slds-size_1-of-1 slds-small-size_1-of-1 slds-medium-size_1-of-2" style="padding:0px 2px;">     
+                                            <lightning:select  variant="label-stacked" name="select" value="{!v.tcmId}" label="TCMilestone">
+                                                <option value="" text="None"></option>
+                                                <aura:iteration items="{!v.tclist}" var="tc">
+                                                    <option value="{!tc.Id}" text="{!tc.Name+' (Milestone value: '+tc.Milestone_Value__c+')'}"></option>
+                                                </aura:iteration>
+                                            </lightning:select>
+                                        </div>                                        
+                                    </div>  
+                                    <br />
+                                    <div class="slds-grid slds-wrap">                    
+                                        <div class="slds-col slds-size_1-of-1 slds-small-size_1-of-1 slds-medium-size_1-of-2" style="padding:0px 2px;text-align:left">     
+                                           <lightning:inputfield  variant="label-stacked" fieldName="Invoice_Format__c" value="{!v.inv.Invoice_Format__c}"  />                                          
+                                            <!--
+                                            <lightning:select aura:id="xcode" required="true" name="select" value="{!v.inv.XERO_ItemCode__c}" label="Item" messageWhenValueMissing="Please select Item">
+                                                <option value="" text="None"></option>
+                                                <aura:iteration items="{!v.itemlist}" var="itm">
+                                                    <option value="{!itm.XERO_Code__c}" text="{!itm.Name}"></option>
+                                                </aura:iteration>
+                                            </lightning:select>
+											
+                                             <lightning:inputfield fieldName="Gst_Charges__c" value="{!v.inv.Gst_Charges__c}"  />                                          
+                                      -->
+										  </div>
+                                        <div class="slds-col slds-size_1-of-1 slds-small-size_1-of-1 slds-medium-size_1-of-2" style="padding:0px 2px;">     
+                                         	<!--
+                                            <lightning:inputfield  variant="label-stacked" fieldName="XERO_TaxType__c" value="{!v.inv.XERO_TaxType__c}" onchange="{!c.calculateInvoiceAmount}" />                                          
+                                        	-->
+										</div>                                        
+                                    </div>  
+                                    <div class="slds-grid slds-wrap">                    
+                                        <div class="slds-col slds-size_1-of-1 slds-small-size_1-of-1 slds-medium-size_1-of-4" style="padding:0px 2px;text-align:left">     
+                                           <lightning:inputfield  variant="label-stacked" fieldName="Transaction_Type__c" value="{!v.inv.Transaction_Type__c}" onchange="{!c.calculateInvoiceAmount}"  />                                          
+                                        </div>
+                                         <div class="slds-col slds-size_1-of-1 slds-small-size_1-of-1 slds-medium-size_1-of-4" style="padding:0px 2px;text-align:left">     
+                                        	
+                                             <ui:inputText value="{!v.inv.Invoice_Amount__c}"  label="Invoice Amount" disabled="true" placeholder="Invoice Amount" />
+                                        </div>
+                                         <div class="slds-col slds-size_1-of-1 slds-small-size_1-of-1 slds-medium-size_1-of-4" style="padding:0px 2px;text-align:left">     
+                                           
+                                             <ui:inputText value="{!v.inv.Tax_Amount__c}"  label="Tax Amount" disabled="true" placeholder="Tax Amount" />
+                                        </div>
+                                         <div class="slds-col slds-size_1-of-1 slds-small-size_1-of-1 slds-medium-size_1-of-4" style="padding:0px 2px;text-align:left">     
+                                           
+                                              <ui:inputText value="{!v.inv.Total_Invoice_Amount__c}"  label="Total Invoice Amount" disabled="true" placeholder="Total Invoice Amount" />
+                                        </div>
+                                    </div>
+                                    
+                                </lightning:recordEditForm>
+                                <br />
+                                <span style="color:darkgreen;font-size:18px;font-weight:bold">Milestones:</span><br />
+                                <lightning:recordEditForm objectApiName="Milestone__c">
+                                <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+                                    <thead style="background-color:darkgreen;color:white;height:35px !important">
+                                    <tr class="slds-line-height_reset">
+                                        <td>Select</td>
+                                        <td scope="col">Name</td>
+                                        <td scope="col">Item Name</td>
+                                        <td scope="col">Description</td>
+                                        <td scope="col">Units</td>
+                                        <td scope="col">Value</td>
+                                        <td scope="col">TaxType</td>
+                                    </tr>
+                                    </thead>
+  									<tbody>
+                                        
+                                    <aura:iteration items="{!v.mslist}" var="ms">
+                                        <tr>
+                                            <td><ui:inputCheckbox aura:id="checkMilestone" value="" text="{!ms}" /></td>
+                                            <td>{!ms.Name}</td>
+                                            <td>
+                                                <aura:if isTrue="{!v.Region=='UK'}">
+                                                      	 <lightning:inputfield  variant="label-stacked" fieldName="XERO_UK_Items__c" value="{!ms.XERO_UK_Items__c}"  />                                          
+                                                	<aura:set attribute="else">
+                                                   		 <lightning:inputfield  variant="label-stacked" fieldName="XERO_AUS_Items__c" value="{!ms.XERO_AUS_Items__c}"  />                                          
+                                                    </aura:set>
+                                                </aura:if>
+                                            </td>
+                                            <td>
+                                                <lightning:inputfield  variant="label-stacked" fieldName="Item_Description__c" value="{!ms.Item_Description__c}"  />                                          
+                                                </td>
+                                            <td>
+                                                <lightning:inputfield  variant="label-stacked" fieldName="Quantity__c" value="{!ms.Quantity__c}"  />                                          
+                                                </td>
+                                            <td>
+                                                <lightning:inputfield  variant="label-stacked" fieldName="Milestone_Value__c" value="{!ms.Milestone_Value__c}"  />                                          
+                                                </td>
+                                            <td>
+                                                <aura:if isTrue="{!v.Region=='UK'}">
+                                                    <lightning:inputfield  variant="label-stacked" fieldName="XERO_UK_Tax_Type__c" value="{!ms.XERO_UK_Tax_Type__c}"  />  
+                                                    <aura:set attribute="else">                                                     
+                                                        <lightning:inputfield  variant="label-stacked" fieldName="XERO_AUS_Tax_Type__c" value="{!ms.XERO_AUS_Tax_Type__c}"  />                                          
+                                                    </aura:set>
+                                                </aura:if>
+                                            </td>
+                                        </tr>       
+                                    </aura:iteration>
+                                           
+                                    </tbody>
+                                </table>
+                                      </lightning:recordEditForm>                                
+                                <br />
+                                <span style="color:darkgreen;font-size:18px;font-weight:bold">Disbursements:</span><br />
+                                 <lightning:recordEditForm objectApiName="Disbursements__c">
+                                <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+                                    <thead style="background-color:darkgreen;color:white;height:35px !important">
+                                    <tr class="slds-line-height_reset">
+                                        <td>Select</td>
+                                        <td scope="col">Name</td>
+                                        <td scope="col">Item Name</td>
+                                        <td scope="col">Description</td>
+                                        <td scope="col">Quantity</td>
+                                        <td scope="col">Value</td>                                        
+                                        <td scope="col">Taxtype</td>
+                                    </tr>
+                                    </thead>
+  									<tbody>
+                                    <aura:iteration items="{!v.dmlist}" var="dm">
+                                        <tr>
+                                            <td><ui:inputCheckbox aura:id="checkDisbursement" value="" text="{!dm}"  /></td>
+                                            <td>{!dm.Name}</td>
+                                            <td>
+                                                <aura:if isTrue="{!v.Region=='UK'}">
+                                                    <lightning:inputfield  variant="label-stacked" fieldName="XERO_UK_Items__c" value="{!dm.XERO_UK_Items__c}"  />                                          
+                                                    <aura:set attribute="else">
+                                                        <lightning:inputfield  variant="label-stacked" fieldName="XERO_AUS_Items__c" value="{!dm.XERO_AUS_Items__c}"  />                                          
+                                                    </aura:set>
+                                                </aura:if>
+                                              </td>
+                                            <td>
+                                                <lightning:inputfield  variant="label-stacked" fieldName="Item_Description__c" value="{!dm.Item_Description__c}"  />                                          
+                                             </td>
+                                            <td>
+                                                <lightning:inputfield  variant="label-stacked" fieldName="Quantity__c" value="{!dm.Quantity__c}"  />                                          
+                                            </td>
+                                            <td>
+                                                <lightning:inputfield  variant="label-stacked" fieldName="Milestone_Value__c" value="{!dm.Milestone_Value__c}"  />                                          
+                                            </td>
+                                            <td>
+                                                <aura:if isTrue="{!v.Region=='UK'}">
+                                                <lightning:inputfield  variant="label-stacked" fieldName="XERO_UK_Tax_Type__c" value="{!dm.XERO_UK_Tax_Type__c}"  />
+                                                    <aura:set attribute="else">
+                                                    <lightning:inputfield  variant="label-stacked" fieldName="Xero_Aus_Tax_Type__c" value="{!dm.Xero_Aus_Tax_Type__c}"  />
+                                                    </aura:set>
+                                                </aura:if>
+                                            </td>
+                                        </tr>       
+                                    </aura:iteration>
+                                    </tbody>
+                                </table>
+                                </lightning:recordEditForm>
+                                <br />
+                                 <span style="color:darkgreen;font-size:18px;font-weight:bold">Commission Milestones:</span><br />
+                                <lightning:recordEditForm objectApiName="Commission_Milestone__c">
+                                <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+                                    <thead style="background-color:darkgreen;color:white;height:35px !important">
+                                    <tr class="slds-line-height_reset">
+                                        <td>Select</td>
+                                        <td scope="col">Name</td>
+                                        <td scope="col">Item Name</td>
+                                        <td scope="col">Description</td>
+                                        <td scope="col">Quantity</td>
+                                        <td scope="col">Value</td>                                        
+                                        <td scope="col">Taxtype</td>                                        
+                                        <td scope="col">Billing Entity</td>                                        
+                                        <td scope="col">Milestone Billable Date</td>                                        
+                                        <td scope="col">Course</td>
+                                    </tr>
+                                    </thead>
+  									<tbody>
+                                    <aura:iteration items="{!v.commlist}" var="cm">
+                                        <tr>
+                                            <td><ui:inputCheckbox aura:id="checkCommissionMilestone" value="" text="{!cm}"  /></td>
+                                            <td>{!cm.Name}</td>
+                                            <td> 
+                                                <aura:if isTrue="{!v.Region=='UK'}">
+                                                     <lightning:inputfield  variant="label-stacked" fieldName="XERO_UK_Items__c" value="{!cm.XERO_UK_Items__c}"  />
+                                                	<aura:set attribute="else">
+                                                    	 <lightning:inputfield  variant="label-stacked" fieldName="XERO_AUS_Items__c" value="{!cm.XERO_AUS_Items__c}"  />
+                                                    </aura:set>
+                                                </aura:if>                                               
+                                            </td>
+                                            <td>
+                                                <lightning:inputfield  variant="label-stacked" fieldName="Item_Description__c" value="{!cm.Item_Description__c}"  />
+             								</td>
+                                            <td>
+                                                <lightning:inputfield  variant="label-stacked" fieldName="Quantity__c" value="{!cm.Quantity__c}"  />
+                                            </td>
+                                            <td>
+                                                 <lightning:inputfield  variant="label-stacked" fieldName="Commission_Amount__c" value="{!cm.Commission_Amount__c}"  />
+                                            </td>
+                                            <td>
+                                                <aura:if isTrue="{!v.Region=='UK'}">
+                                                	<lightning:inputfield  variant="label-stacked" fieldName="XERO_UK_Tax_Type__c" value="{!cm.XERO_UK_Tax_Type__c}"  />                                                
+                                                	<aura:set attribute="else">
+                                                    <lightning:inputfield  variant="label-stacked" fieldName="Xero_Aus_Tax_Type__c" value="{!cm.Xero_Aus_Tax_Type__c}"  />
+                                                    </aura:set>
+                                                </aura:if>
+                                              </td>
+                                            <td>
+                                                <lightning:inputfield  variant="label-stacked" fieldName="Billing_Entity__c" value="{!cm.Billing_Entity__c}"  />                                                
+                                             </td>
+                                            <td>
+                                                <lightning:inputfield  variant="label-stacked" fieldName="Milestone_Billable_Date__c" value="{!cm.Milestone_Billable_Date__c}"  />                                                
+                                            </td>
+                                            <td>
+                                                <lightning:inputfield  variant="label-stacked" fieldName="Course__c" value="{!cm.Course__c}"  />                                                
+                                            </td>
+                                            <td></td>
+                                        </tr>       
+                                    </aura:iteration>
+                                    </tbody>
+                                </table>
+                                </lightning:recordEditForm>
+                                <br />
+                                 <span style="color:darkgreen;font-size:18px;font-weight:bold">Admin Fee:</span><br />
+                                <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+                                    <thead style="background-color:darkgreen;color:white;height:35px !important">
+                                    <tr class="slds-line-height_reset">
+                                        <td>Select</td>
+                                        <td scope="col">Name</td>
+                                        <td scope="col">Item Name</td>
+                                        <td scope="col">Description</td>
+                                        <td scope="col">Quantity</td>
+                                        <td scope="col">Value</td>
+                                        <td scope="col">Taxtype</td>
+                                    </tr>
+                                    </thead>
+  									<tbody>  
+                                        <aura:iteration items="{!v.aflist}" var="af">
+                                        <tr>                                           
+                                            <td><ui:inputCheckbox aura:id="checkAdminFee" value="" text="{!af}" /></td>
+                                            <td>{!af.Name}</td>
+                                            <td>{!af.ItemId}</td>
+                                            <td>{!af.Admin_Fees_Description}</td>
+                                            <td>{!af.Units}</td>
+                                            <td>{!af.Value}</td>                                            
+                                            <td>NONE</td>
+                                        </tr> 
+                                        </aura:iteration> 
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <!--###### MODAL BOX FOOTER Part Start ######-->
+                        <footer class="slds-modal__footer">
+                            <lightning:button variant="neutral" 
+                                              label="Cancel"
+                                              title="Cancel"
+                                              onclick="{! c.cancel }"/>
+                            <lightning:button aura:id="xinv_savebtn"
+                                              variant="brand" 
+                                              label="Save"
+                                              title="Save"
+                                              onclick="{! c.save }"/>
+                        </footer>
+                    </div>
+                </section>
+                <div class="slds-backdrop slds-backdrop_open"></div>
+                <!--###### MODAL BOX Part END Here ######-->
+                
+            </aura:if>
+        </div>
+    </aura:if>
+</aura:component>

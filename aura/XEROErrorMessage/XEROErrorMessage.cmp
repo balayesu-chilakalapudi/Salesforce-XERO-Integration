@@ -1,0 +1,46 @@
+<aura:component implements="flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,forceCommunity:availableForAllPageTypes" 
+                access="global" 
+                controller="XEROErrorMessageCtrl"
+                >
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    <aura:attribute name="msg" type="List" />
+    <aura:attribute name="xeroId" type="String" />
+    <aura:attribute name="duplist" type="List" />
+     <aura:attribute name="tokenfail" type="Boolean" />
+    <aura:attribute name="tokenurl" type="String" />
+    
+    <aura:if isTrue="{!v.xeroId==null}">
+	<div style="">
+        <aura:if isTrue="{!v.msg.length>0}">
+            <div style="background-color:white;padding:1%">
+        <span style="color:red;font-size:20px;font-weight:bold">  Error Messages: </span><br />
+            <aura:iteration items="{!v.msg}" var="m" indexVar="index">               
+            	<span style="color:red;font-size:15px">
+        		{!index+1}.&nbsp;{!m}
+        	</span>
+                <br />
+            </aura:iteration> 
+        	<br />
+                </div>
+        </aura:if>
+        
+       <aura:if isTrue="{!v.duplist.length>1}">
+           <div style="background-color:white;padding:1%">
+      <span style="color:red;font-size:20px;font-weight:bold"> Duplicate Records:</span>  <br />
+         <aura:iteration items="{!v.duplist}" var="dp" indexVar="index">               
+            	<span style="font-size:15px">
+                    <a href="{!'/'+dp.key}">&nbsp;{!dp.value}</a>
+        		</span>,
+            </aura:iteration> 
+        	<br />
+           </div>
+           </aura:if>
+        
+        <aura:if isTrue="{!v.tokenfail}">
+           <div style="background-color:white;padding:1%">
+               <button class="slds-button slds-button_brand" onclick="{!c.authorize}">Authorize XERO</button>
+            </div>
+        </aura:if>
+    </div>
+        </aura:if>
+</aura:component>
