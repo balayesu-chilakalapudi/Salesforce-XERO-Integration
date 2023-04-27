@@ -1,0 +1,12 @@
+<apex:page controller="XEROConnector" action="{!XEROAuth}">
+<apex:form >
+    <apex:pageblock >
+        <!--
+        <apex:commandbutton action="{!XEROAuth}" value="XERO Authentication">
+		
+    </apex:commandbutton>
+		-->
+</apex:pageblock>
+    
+</apex:form>
+</apex:page>
